@@ -1,0 +1,434 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Gemini CLI Interface</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          sans-serif;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        padding: 20px;
+        flex-grow: 1;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .header {
+        text-align: center;
+        color: white;
+        margin-bottom: 30px;
+      }
+
+      .header h1 {
+        font-size: 2.5rem;
+        margin-bottom: 10px;
+        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+      }
+
+      .header p {
+        font-size: 1.1rem;
+        opacity: 0.9;
+      }
+
+      .main-content {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 20px;
+        flex-grow: 1;
+      }
+
+      .input-panel,
+      .output-panel {
+        background: rgba(255, 255, 255, 0.95);
+        border-radius: 15px;
+        padding: 25px;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        backdrop-filter: blur(10px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+      }
+
+      .panel-title {
+        font-size: 1.3rem;
+        font-weight: 600;
+        margin-bottom: 20px;
+        color: #333;
+        border-bottom: 2px solid #667eea;
+        padding-bottom: 10px;
+      }
+
+      .form-group {
+        margin-bottom: 20px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 8px;
+        font-weight: 500;
+        color: #555;
+      }
+
+      .form-group input,
+      .form-group select,
+      .form-group textarea {
+        width: 100%;
+        padding: 12px;
+        border: 2px solid #e0e0e0;
+        border-radius: 8px;
+        font-size: 14px;
+        transition: border-color 0.3s ease;
+      }
+
+      .form-group input:focus,
+      .form-group select:focus,
+      .form-group textarea:focus {
+        outline: none;
+        border-color: #667eea;
+        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      }
+
+      .form-group textarea {
+        min-height: 120px;
+        resize: vertical;
+        font-family: inherit;
+      }
+
+      .checkbox-group {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 15px;
+        margin-top: 10px;
+      }
+
+      .checkbox-item {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .checkbox-item input[type="checkbox"] {
+        width: auto;
+        margin: 0;
+      }
+
+      .file-input-wrapper {
+        position: relative;
+        overflow: hidden;
+        display: inline-block;
+        width: 100%;
+      }
+
+      .file-input-button {
+        background: linear-gradient(45deg, #667eea, #764ba2);
+        color: white;
+        padding: 12px 20px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 14px;
+        width: 100%;
+        transition: transform 0.2s ease;
+      }
+
+      .file-input-button:hover {
+        transform: translateY(-1px);
+        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      }
+
+      .execute-button {
+        background: linear-gradient(45deg, #43a047, #66bb6a);
+        color: white;
+        padding: 15px 30px;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-size: 16px;
+        font-weight: 600;
+        width: 100%;
+        transition: all 0.3s ease;
+        margin-top: 20px;
+      }
+
+      .execute-button:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(67, 160, 71, 0.4);
+      }
+
+      .execute-button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+        transform: none;
+        box-shadow: none;
+      }
+
+      .output-container {
+        background: #1e1e1e;
+        color: #f0f0f0;
+        border-radius: 8px;
+        padding: 20px;
+        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        font-size: 13px;
+        line-height: 1.5;
+        max-height: 400px;
+        overflow-y: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .status-bar {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 15px;
+        padding: 10px;
+        background: rgba(102, 126, 234, 0.1);
+        border-radius: 8px;
+      }
+
+      .status-indicator {
+        padding: 5px 12px;
+        border-radius: 20px;
+        font-size: 12px;
+        font-weight: 600;
+      }
+
+      .status-ready {
+        background: #e8f5e8;
+        color: #2e7d32;
+      }
+
+      .status-running {
+        background: #fff3e0;
+        color: #f57c00;
+      }
+
+      .status-error {
+        background: #ffebee;
+        color: #c62828;
+      }
+
+      .clear-button {
+        background: #f44336;
+        color: white;
+        border: none;
+        padding: 6px 12px;
+        border-radius: 6px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .selected-file {
+        margin-top: 10px;
+        padding: 10px;
+        background: #e8f5e8;
+        border-radius: 6px;
+        font-size: 13px;
+        color: #2e7d32;
+      }
+
+      @media (max-width: 768px) {
+        .main-content {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
+    <script src="browserControl.js"></script>
+
+    <!-- <script src="geminiBrowser.js"></script> -->
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>🤖 Gemini CLI Interface</h1>
+        <p>Execute Gemini AI commands with a beautiful interface</p>
+      </div>
+
+      <div class="main-content">
+        <div class="input-panel">
+          <h2 class="panel-title">Configuration</h2>
+
+         <div class="form-group">
+  <label for="model">Model:</label>
+    <select id="model">
+    <option value="">Default Model</option>
+    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+    <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
+  </select>
+</div>
+
+          <div class="form-group">
+            <label for="prompt">Prompt:</label>
+            <textarea
+              id="prompt"
+              placeholder="Enter your prompt here..."
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label>Image (Optional):</label>
+            <div class="file-input-wrapper">
+              <button class="file-input-button" id="selectImageBtn">
+                📁 Select Image
+              </button>
+            </div>
+            <div
+              id="selectedFile"
+              class="selected-file"
+              style="display: none"
+            ></div>
+          </div>
+
+          <div class="form-group">
+            <label>Options:</label>
+            <div class="checkbox-group">
+              <div class="checkbox-item">
+                <input type="checkbox" id="sandbox" />
+                <label for="sandbox">Sandbox Mode</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="debug" />
+                <label for="debug">Debug Mode</label>
+              </div>
+              <div class="checkbox-item">
+                <input type="checkbox" id="yolo" />
+                <label for="yolo">YOLO Mode</label>
+              </div>
+            </div>
+          </div>
+
+          <!-- Add to your input panel -->
+          <div class="form-group">
+            <label>Browser Control:</label>
+            <div style="display: flex; gap: 10px; margin-top: 10px">
+              <button id="toggleBrowserBtn" class="file-input-button">
+                🖥️ Toggle Browser
+              </button>
+              <button id="browserControlBtn" class="file-input-button">
+                🕹️ Show Controls
+              </button>
+            </div>
+
+            <div
+              id="browserControlPanel"
+              style="display: none; margin-top: 15px"
+            >
+              <div
+                style="
+                  display: grid;
+                  grid-template-columns: 1fr auto;
+                  gap: 10px;
+                "
+              >
+                <input type="text" id="browserUrl" placeholder="Enter URL" />
+                <button id="navigateBtn" class="file-input-button">Go</button>
+              </div>
+
+              <div style="margin-top: 10px">
+                <textarea
+                  id="domQuery"
+                  placeholder="DOM Query or JavaScript"
+                  style="width: 100%; min-height: 60px"
+                ></textarea>
+                <div style="display: flex; gap: 10px; margin-top: 5px">
+                  <button id="inspectBtn" class="file-input-button">
+                    Inspect
+                  </button>
+                </div>
+              </div>
+
+              <div style="margin-top: 10px">
+                <input
+                  type="text"
+                  id="elementSelector"
+                  placeholder="Element selector"
+                />
+                <div style="display: flex; gap: 10px; margin-top: 5px">
+                  <button id="clickBtn" class="file-input-button">Click</button>
+                  <button id="inputBtn" class="file-input-button">
+                    Set Value
+                  </button>
+                  <input
+                    type="text"
+                    id="elementValue"
+                    placeholder="Value"
+                    style="flex: 1"
+                  />
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- <button class="execute-button" id="executeBtn">
+            🚀 Execute Gemini CLI
+          </button> -->
+
+          <button id="executeBtn" class="file-input-button">Execute</button>
+
+          <!-- Add this section to your existing HTML, perhaps near the execute button -->
+<div class="chat-history-controls" style="display: flex; gap: 10px; align-items: center; margin: 10px 0; flex-wrap: wrap;">
+  <button id="showHistoryBtn" title="Show conversation history">
+    📚 Show History <span id="historyCount">(0/0)</span>
+  </button>
+  
+  <button id="clearHistoryBtn" title="Clear conversation history" style="background-color: #ff6b6b;">
+    🗑️ Clear History
+  </button>
+  
+  <div style="display: flex; align-items: center; gap: 5px;">
+    <label for="historyLengthInput" style="font-size: 12px;">Max History:</label>
+    <input 
+      type="number" 
+      id="historyLengthInput" 
+      min="1" 
+      max="50" 
+      value="10" 
+      style="width: 60px; padding: 2px 5px; border: 1px solid #333; background: #2a2a2a; color: #f0f0f0; border-radius: 3px;"
+    />
+  </div>
+  
+  <small style="color: #888; font-size: 11px;">
+    💡 Context is automatically included in prompts
+  </small>
+</div>
+        </div>
+
+        <div class="output-panel">
+          <h2 class="panel-title">Output</h2>
+
+          <div class="status-bar">
+            <div class="status-indicator status-ready" id="statusIndicator">
+              Ready
+            </div>
+            <button class="clear-button" id="clearBtn">Clear Output</button>
+          </div>
+
+          <div class="output-container" id="output">
+            <div style="color: #888; font-style: italic">
+              Output will appear here when you execute the Gemini CLI...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script src="renderer.js" >
+    </script>
+  </body>
+</html>

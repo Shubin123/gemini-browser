@@ -1,0 +1,12 @@
+
+// codesign for macos
+// get a G3 wwdr certificate from https://www.apple.com/certificateauthority/ learn more @ https://developer.apple.com/help/account/certificates/wwdr-intermediate-certificates/
+security find-identity -v -p codesigning
+security delete-certificate -Z CERTNUMBER
+export CSC_IDENTITY_AUTO_DISCOVERY=true 
+
+
+// otherwise
+export CSC_IDENTITY_AUTO_DISCOVERY=true 
+
+// refer to main readme for npm commands that will perform the same

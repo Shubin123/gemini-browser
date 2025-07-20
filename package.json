@@ -1,0 +1,121 @@
+{
+  "name": "gemini-browser",
+  "version": "0.0.1",
+  "description": "automated browsing using gemini-cli",
+  "main": "main.js",
+  "type":"module",
+  "scripts": {
+    "start": "electron .",
+    "dev": "electron . --remote-debugging-port=8315",
+    "electron": "electron .",
+    "electron:dev": "NODE_ENV=development electron .",
+    "build": "electron-builder",
+    "build:dir": "electron-builder --dir",
+    "build:win": "electron-builder --win",
+    "build:win32": "electron-builder --win --ia32",
+    "build:win64": "electron-builder --win --x64",
+    "build:mac": "electron-builder --mac",
+    "build:mac:universal": "electron-builder --mac --universal",
+    "build:mac:unsigned": "electron-builder --mac --config.mac.identity=null",
+    "build:linux": "electron-builder --linux",
+    "build:linux:x64": "electron-builder --linux --x64",
+    "build:linux:arm64": "electron-builder --linux --arm64",
+    "build:all": "electron-builder --win --mac --linux",
+    "dist": "npm run build",
+    "dist:dir": "npm run build:dir",
+    "pack": "electron-builder --dir",
+    "pack:win": "electron-builder --win --dir",
+    "pack:mac": "electron-builder --mac --dir",
+    "pack:linux": "electron-builder --linux --dir",
+    "rebuild": "electron-rebuild",
+    "postinstall": "electron-builder install-app-deps && npm run rebuild",
+    "prepack": "npm run rebuild",
+    "clean": "rimraf dist build",
+    "clean-certs": "security delete-certificate -t -c \"Developer ID Application\"",
+    "check-versions": "node -e \"console.log('Electron:', require('electron/package.json').version); console.log('Puppeteer-core:', require('puppeteer-core/package.json').version);\"",
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "keywords": [
+    "ai",
+    "automation",
+    "mcp",
+    "gemini-cli",
+    "electron",
+    "puppeteer"
+  ],
+  "author": "Shubin Wang",
+  "license": "Apache-2.0",
+  "devDependencies": {
+    "electron": "^27.0.0",
+    "electron-builder": "^24.6.4",
+    "electron-prebuilt-compile": "^8.2.0"
+  },
+  "dependencies": {
+    "puppeteer-core": "~21.3.8",
+    "puppeteer-in-electron": "^3.0.5",
+    "node-fetch": "^3.3.2",
+    "hazardous": "^0.3.0",
+    "rimraf": "^5.0.5"
+  },
+  "build": {
+    "appId": "com.shubinwang.gemini-browser",
+    "productName": "Gemini Browser",
+    "directories": {
+      "output": "build/dist"
+    },
+    "files": [
+      "main.js",
+      "renderer.js",
+      "index.html",
+      "package.json",
+      "node_modules/**/*",
+      "preload.cjs"
+    ],
+    "asarUnpack": [
+      "node_modules/get-port-cli/**/*",
+      "node_modules/puppeteer-core/**/*",
+      "node_modules/puppeteer-in-electron/**/*"
+    ],
+    "win": {
+      "target": "nsis",
+      "icon": "assets/icon.ico"
+    },
+    "mac": {
+      "target": "dmg",
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "entitlements": "build/entitlements.mac.plist",
+      "entitlementsInherit": "build/entitlements.mac.plist",
+      "notarize": false,
+      "extraResources": [
+        {
+          "from": "gemini-cli/",
+          "to": "gemini-cli/"
+        }
+      ]
+    },
+    "linux": {
+      "target": "AppImage",
+      "icon": "assets/icon.png",
+      "category": "Utility"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true
+    }
+  },
+  "engines": {
+    "node": ">=16.0.0",
+    "npm": ">=8.0.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/shubinwang/gemini-browser.git"
+  },
+  "bugs": {
+    "url": "https://github.com/shubinwang/gemini-browser/issues"
+  },
+  "homepage": "https://github.com/shubinwang/gemini-browser#readme"
+}
