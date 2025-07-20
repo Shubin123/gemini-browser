@@ -4,9 +4,8 @@ import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
-// import { createGeminiProcess } from "geminiBrowser.js"
 
-const __filename = fileURLToPath(import.meta.url);
+const __filename =  fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
 let mainWindow;
@@ -36,6 +35,7 @@ function createMainWindow() {
       preload: preloadPath,
       enableRemoteModule: false,
       sandbox: false,
+      // preload: path.join(__dirname, 'preload.cjs') // Use absolute path
     },
     icon: path.join(__dirname, "assets", "icon.png"),
     titleBarStyle: "default",
@@ -189,6 +189,7 @@ const getGeminiPath = () => {
   } else {
     // In development, use process.cwd()
     return path.join(process.cwd(), "gemini-cli", "gemini");
+    // return path.join(process.cwd(), "gemini-cli");
   }
 };
 
@@ -380,7 +381,6 @@ ipcMain.handle(
 
         // Build command arguments
         const args = [];
-
         // Add model if specified
         if (options.model) {
           args.push("-m", options.model);

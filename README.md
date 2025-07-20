@@ -6,18 +6,26 @@ An automated browsing application powered by Gemini CLI, built with Electron and
 
 - 🤖 **AI-Powered Automation** - Leverage Gemini CLI for intelligent web browsing
 - 🔧 **Puppeteer Integration** - Two methods for robust browser automation within Electron
-- 🖥️ **Cross-Platform** - Build for Windows, macOS, and Linux
-- 🚀 **Modern Architecture** - Built with Electron 27 and latest web technologies
-- 🛡️ **Secure** - Proper code signing and security configurations
+- 🖥️ **Cross-Platform** - Build for Windows, macOS, and Linux, one click install
+- 🚀 **Modern Architecture** - Built with Electron 37 and latest web technologies
+- 🛡️ **Secure** - Proper code signing and security configurations, Oauth handled by google
 
-## Prerequisites
 
+## Install: fastest
+- just click and install from release, Oauth signin is managed by gemini-cli which is bundled as a binary.
+
+## Install: from [npmjs](https://www.npmjs.com/package/gemini-browser)
+```bash
+npx gemini-browser
+```
+
+## Install: from source
+# Prerequisites
 - Node.js 16.0.0 or higher
 - npm 8.0.0 or higher
 - For macOS builds: Valid Apple Developer certificate
 - For AI features: google account
 
-## Installation
 
 Clone the repository and install dependencies:
 
@@ -26,6 +34,9 @@ git clone https://github.com/shubinwang/gemini-browser.git
 cd gemini-browser
 npm install
 ```
+
+⚠️ Both installing from source and from npmjs will assume you have <ins>gemini-cli pre-installed</ins> and ready to use through ```gemini```. If its not detected through this command, 
+the application will ask to download gemini-cli.
 
 ## Development
 
@@ -45,8 +56,8 @@ For basic development without debugging:
 npm start
 ```
 
-### Puppeteer Integration
-
+### Puppeteer Integration (w.i.p) (right now builtin electron commands used by gemini to control browser)
+ 
 This project supports two methods for integrating Puppeteer with Electron:
 
 #### Method 1: Using `puppeteer-in-electron`
@@ -90,10 +101,6 @@ async function connectPuppeteer() {
 
 ### Important Setup Notes
 
-**For main.js**, add this at the top:
-```javascript
-require('hazardous');
-```
 
 **Version Compatibility**: Ensure Puppeteer Core version matches Electron's bundled Chrome version:
 ```bash
@@ -187,21 +194,6 @@ security find-identity -v -p codesigning
 npm run build:mac:unsigned
 ```
 
-## Project Structure
-
-```
-gemini-browser/
-├── main.js              # Main Electron process
-├── package.json         # Dependencies and build config
-├── build/               # Build assets and certificates
-│   └── entitlements.mac.plist
-├── assets/              # Application icons
-│   ├── icon.ico         # Windows icon
-│   ├── icon.icns        # macOS icon
-│   └── icon.png         # Linux icon
-└── dist/                # Built applications
-```
-
 ## Environment Variables
 
 For code signing control:
@@ -218,4 +210,4 @@ export NODE_ENV=development                # Development mode
 | `npm run dev` | Run with remote debugging |
 | `npm run build` | Build for current platform |
 | `npm run pack` | Create unpacked build |
-| `npm run clean`
+| `npm run clean` | Deletes build directory ⚠️  this wipes example entitlements.mac.plist (needed for signing)|

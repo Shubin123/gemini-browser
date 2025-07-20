@@ -1,9 +1,12 @@
 {
   "name": "gemini-browser",
-  "version": "0.0.1",
+  "version": "0.0.9",
   "description": "automated browsing using gemini-cli",
   "main": "main.js",
-  "type":"module",
+  "type": "module",
+  "bin": {
+    "gemini-browser": "./cli.js"
+  },
   "scripts": {
     "start": "electron .",
     "dev": "electron . --remote-debugging-port=8315",
@@ -28,7 +31,6 @@
     "pack:mac": "electron-builder --mac --dir",
     "pack:linux": "electron-builder --linux --dir",
     "rebuild": "electron-rebuild",
-    "postinstall": "electron-builder install-app-deps && npm run rebuild",
     "prepack": "npm run rebuild",
     "clean": "rimraf dist build",
     "clean-certs": "security delete-certificate -t -c \"Developer ID Application\"",
@@ -46,16 +48,15 @@
   "author": "Shubin Wang",
   "license": "Apache-2.0",
   "devDependencies": {
-    "electron": "^27.0.0",
     "electron-builder": "^24.6.4",
-    "electron-prebuilt-compile": "^8.2.0"
+    "electron-rebuild": "^3.2.9"
   },
   "dependencies": {
     "puppeteer-core": "~21.3.8",
-    "puppeteer-in-electron": "^3.0.5",
-    "node-fetch": "^3.3.2",
-    "hazardous": "^0.3.0",
-    "rimraf": "^5.0.5"
+    "puppeteer-in-electron": "^3.0.5"
+  },
+  "peerDependencies": {
+    "electron": "^37.2.3"
   },
   "build": {
     "appId": "com.shubinwang.gemini-browser",
@@ -112,10 +113,10 @@
   },
   "repository": {
     "type": "git",
-    "url": "https://github.com/shubinwang/gemini-browser.git"
+    "url": "https://github.com/shubin123/gemini-browser.git"
   },
   "bugs": {
-    "url": "https://github.com/shubinwang/gemini-browser/issues"
+    "url": "https://github.com/shubin123/gemini-browser/issues"
   },
-  "homepage": "https://github.com/shubinwang/gemini-browser#readme"
+  "homepage": "https://github.com/shubin123/gemini-browser#readme"
 }
