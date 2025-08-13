@@ -1,8 +1,10 @@
-#!/usr/bin/env node
-// this script is for npm release and developing with source. it is not packaged with binary
-import { spawn } from 'child_process';
-import path from 'path';
-import { fileURLToPath } from 'url';
+// #!/usr/bin/env node
+// // this script is for npm release and developing with source. it is not packaged with binary
+// import { spawn } from 'child_process';
+// import path from 'path';
+// import { fileURLToPath } from 'url';
+import { setupPlaywrightIPC } from './playwr.js';
+
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -19,3 +21,7 @@ const child = spawn("electron", ['main.js'], {
 });
 
 child.on('exit', (code) => process.exit(code));
+
+// // if launching through playwright
+// let playwrightBridge = setupPlaywrightIPC(null, null, null);
+// playwrightBridge.launchElectronPlaywright()

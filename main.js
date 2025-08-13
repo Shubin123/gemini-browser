@@ -4,6 +4,10 @@ import { spawn } from "child_process";
 import path from "path";
 import fs from "fs";
 import { fileURLToPath } from "url";
+import { setupPlaywrightIPC } from './playwr.js';
+import { createBrowserWindow } from './window.js';
+
+// import { playwrightBridge } from './cli.js';
 
 const __filename =  fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
@@ -11,6 +15,11 @@ const __dirname = path.dirname(__filename);
 let mainWindow;
 let browserWindow;
 let tempDir;
+let playwrightBridge;
+// let playwrightBridge = setupPlaywrightIPC(null, null, null);
+// let browserWindow = await playwrightBridge.launchElectronPlaywright()
+// console.log(browserWindow)
+
 
 // Create temp directory for screenshots
 function createTempDirectory() {
@@ -53,34 +62,6 @@ function createMainWindow() {
   }
 }
 
-function createBrowserWindow() {
-  browserWindow = new BrowserWindow({
-    width: 1600,
-    height: 900,
-    webPreferences: {
-      nodeIntegration: false,
-      contextIsolation: true,
-      enableRemoteModule: false,
-      sandbox: false,
-      webSecurity: false, // Allow cross-origin requests for the browser
-    },
-    icon: path.join(__dirname, "assets", "icon.png"),
-    titleBarStyle: "default",
-    show: false,
-  });
-
-  browserWindow.once("ready-to-show", () => {
-    browserWindow.show();
-  });
-
-  // Load a default page or leave blank
-  browserWindow.loadURL("https://google.com");
-
-  if (process.env.NODE_ENV === "development") {
-    browserWindow.webContents.openDevTools();
-  }
-}
-
 async function handleBrowserCommand(command) {
   if (!browserWindow || browserWindow.isDestroyed()) {
     createBrowserWindow();
@@ -98,15 +79,15 @@ async function handleBrowserCommand(command) {
 
       case "click":
         const clickResult = await browserWindow.webContents.executeJavaScript(`
-                    (() => {
-                        const el = document.querySelector('${args[0]}');
-                        if (el) {
-                            el.click();
-                            return { success: true };
-                        }
-                        return { success: false, error: 'Element not found' };
-                    })()
-                `);
+          (() => {
+            const el = document.querySelector('${args[0]}');
+            if (el) {
+              el.click();
+              return { success: true };
+            }
+            return { success: false, error: 'Element not found' };
+          })()
+        `);
         return {
           status: clickResult.error ? "error" : "success",
           ...clickResult,
@@ -116,17 +97,17 @@ async function handleBrowserCommand(command) {
         const selector = args[0];
         const value = args.slice(1).join(" ");
         const inputResult = await browserWindow.webContents.executeJavaScript(`
-                    (() => {
-                        const el = document.querySelector('${selector}');
-                        if (el) {
-                            el.value = ${JSON.stringify(value)};
-                            el.dispatchEvent(new Event('input', { bubbles: true }));
-                            el.dispatchEvent(new Event('change', { bubbles: true }));
-                            return { success: true };
-                        }
-                        return { success: false, error: 'Element not found' };
-                    })()
-                `);
+          (() => {
+            const el = document.querySelector('${selector}');
+            if (el) {
+              el.value = ${JSON.stringify(value)};
+              el.dispatchEvent(new Event('input', { bubbles: true }));
+              el.dispatchEvent(new Event('change', { bubbles: true }));
+              return { success: true };
+            }
+            return { success: false, error: 'Element not found' };
+          })()
+        `);
         return inputResult;
 
       case "screenshot":
@@ -138,40 +119,93 @@ async function handleBrowserCommand(command) {
 
       case "evaluate":
         const code = args.join(" ");
-        const evalResult = await browserWindow.webContents.executeJavaScript(
-          code
-        );
+        const evalResult = await browserWindow.webContents.executeJavaScript(code);
         return { status: "success", result: evalResult };
 
       case "get":
         const domInfo = await browserWindow.webContents.executeJavaScript(`
-                    (() => {
-                        const el = document.querySelector('${args[0]}');
-                        if (!el) return null;
-                        
-                        return {
-                            tagName: el.tagName,
-                            id: el.id,
-                            className: el.className,
-                            textContent: el.textContent,
-                            value: el.value,
-                            attributes: Array.from(el.attributes).map(attr => ({
-                                name: attr.name,
-                                value: attr.value
-                            })),
-                            children: el.children.length,
-                            boundingRect: {
-                                x: el.getBoundingClientRect().x,
-                                y: el.getBoundingClientRect().y,
-                                width: el.getBoundingClientRect().width,
-                                height: el.getBoundingClientRect().height
-                            }
-                        };
-                    })()
-                `);
+          (() => {
+            const el = document.querySelector('${args[0]}');
+            if (!el) return null;
+            
+            return {
+              tagName: el.tagName,
+              id: el.id,
+              className: el.className,
+              textContent: el.textContent,
+              value: el.value,
+              attributes: Array.from(el.attributes).map(attr => ({
+                name: attr.name,
+                value: attr.value
+              })),
+              children: el.children.length,
+              boundingRect: {
+                x: el.getBoundingClientRect().x,
+                y: el.getBoundingClientRect().y,
+                width: el.getBoundingClientRect().width,
+                height: el.getBoundingClientRect().height
+              }
+            };
+          })()
+        `);
         return domInfo
           ? { status: "success", element: domInfo }
           : { status: "error", message: "Element not found" };
+
+      case "observe":
+        if (!playwrightBridge) {
+          return { status: "error", error: 'Playwright not initialized' };
+        }
+        const observation = await playwrightBridge.getObservation();
+        return { status: "success", data: observation };
+      case "annotated-screenshot":
+        if (!playwrightBridge) {
+          return { status: "error", error: 'Playwright not initialized' };
+        }
+        const annotatedResult = await playwrightBridge.createAnnotatedScreenshot();
+        return { status: "success", data: annotatedResult };
+
+      case "action":
+        if (!playwrightBridge) {
+          return { status: "error", error: 'Playwright not initialized' };
+        }
+        
+        // Parse action parameters: actionIndex, actionType, inputValue
+        // Format: !browser action <actionIndex> [actionType] [inputValue]
+        const actionIndex = parseInt(args[0]);
+        const actionType = args[1] || 'click';
+        const inputValue = args.slice(2).join(' ') || null;
+        
+        if (isNaN(actionIndex)) {
+          return { status: "error", error: 'Invalid action index' };
+        }
+        
+        const actionResult = await playwrightBridge.takeAction(actionIndex, actionType, inputValue);
+        return { status: "success", data: actionResult };
+
+      case "action-space":
+        if (!playwrightBridge) {
+          return { status: "error", error: 'Playwright not initialized' };
+        }
+        
+        const elements = await playwrightBridge.getActionableElements();
+        const summary = {
+          total_actions: elements.length,
+          action_types: {
+            clickable: elements.filter(el => el.action_type === 'click').length,
+            inputs: elements.filter(el => el.action_type === 'type').length,
+            selects: elements.filter(el => el.action_type === 'select').length
+          },
+          elements: elements.map(el => ({
+            index: el.index,
+            type: el.action_type,
+            description: el.description,
+            tag_name: el.tag_name,
+            bounding_box: el.bounding_box
+          }))
+        };
+        
+        return { status: "success", data: summary };
 
       default:
         throw new Error(`Unknown browser command: ${action}`);
@@ -181,6 +215,7 @@ async function handleBrowserCommand(command) {
     return { status: "error", error: error.message, stack: error.stack };
   }
 }
+
 
 const getGeminiPath = () => {
   if (app.isPackaged) {
@@ -365,7 +400,7 @@ ipcMain.handle(
         }
 
         let imagePath = await capscreenshot();
-
+        
         // Automatically capture screenshot if requested
         if (captureScreen) {
           console.log("Capturing screenshot for Gemini analysis...");
@@ -388,11 +423,11 @@ ipcMain.handle(
 
         // Combine prompt with image path if screenshot was captured
         let finalPrompt = prompt || "";
-        if (imagePath && fs.existsSync(imagePath)) {
-          const absoluteImagePath = path.resolve(imagePath);
-          finalPrompt = `${prompt}\n\n[Image: ${absoluteImagePath}]`;
-          console.log("Added screenshot path to prompt:", absoluteImagePath);
-        }
+        // if (imagePath && fs.existsSync(imagePath)) {
+          // const absoluteImagePath = path.resolve(imagePath);
+          // finalPrompt = `${prompt}\n\n[Image: ${absoluteImagePath}]`;
+          // console.log("Added screenshot path to prompt:", absoluteImagePath);
+        // }
 
         // Add final prompt
         if (finalPrompt) {
@@ -641,6 +676,7 @@ ipcMain.handle("is-browser-visible", async () => {
 
 // Toggle browser window visibility
 ipcMain.handle("toggle-browser-window", async () => {
+  // function does not work right now
   try {
     if (!browserWindow || browserWindow.isDestroyed()) {
       createBrowserWindow();
@@ -658,6 +694,83 @@ ipcMain.handle("toggle-browser-window", async () => {
     return false;
   }
 });
+
+ipcMain.handle('ai-observe', async () => {
+  try {
+    if (!playwrightBridge) {
+      return { success: false, error: 'Playwright not initialized' };
+    }
+    
+    const observation = await playwrightBridge.getObservation();
+    return { success: true, data: observation };
+  } catch (error) {
+    console.error('AI observation error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// // Get annotated screenshot for AI
+ipcMain.handle('ai-annotated-screenshot', async () => {
+  try {
+    if (!playwrightBridge) {
+      return { success: false, error: 'Playwright not initialized' };
+    }
+    
+    const result = await playwrightBridge.createAnnotatedScreenshot();
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('Annotated screenshot error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Take AI action
+ipcMain.handle('ai-action', async (event, { actionIndex, actionType = 'click', inputValue = null }) => {
+  try {
+    if (!playwrightBridge) {
+      return { success: false, error: 'Playwright not initialized' };
+    }
+    
+    const result = await playwrightBridge.takeAction(actionIndex, actionType, inputValue);
+    return { success: true, data: result };
+  } catch (error) {
+    console.error('AI action error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+// Get action space summary for AI
+ipcMain.handle('ai-action-space', async () => {
+  try {
+    if (!playwrightBridge) {
+      return { success: false, error: 'Playwright not initialized' };
+    }
+    
+    const elements = await playwrightBridge.getActionableElements();
+    const summary = {
+      total_actions: elements.length,
+      action_types: {
+        clickable: elements.filter(el => el.action_type === 'click').length,
+        inputs: elements.filter(el => el.action_type === 'type').length,
+        selects: elements.filter(el => el.action_type === 'select').length
+      },
+      elements: elements.map(el => ({
+        index: el.index,
+        type: el.action_type,
+        description: el.description,
+        tag_name: el.tag_name,
+        bounding_box: el.bounding_box
+      }))
+    };
+    
+    return { success: true, data: summary };
+  } catch (error) {
+    console.error('Action space error:', error);
+    return { success: false, error: error.message };
+  }
+});
+
+
 
 // Clean up temp directory on app exit
 function cleanupTempDirectory() {
@@ -682,14 +795,21 @@ function cleanupTempDirectory() {
 app.whenReady().then(() => {
   createTempDirectory();
   createMainWindow();
-  createBrowserWindow();
+  browserWindow = createBrowserWindow();
+  
 
-  app.on("activate", () => {
-    if (BrowserWindow.getAllWindows().length === 0) {
-      createMainWindow();
-      createBrowserWindow();
-    }
-  });
+
+
+  // createBrowserWindow(); // if using playwright dont launch this window
+
+  playwrightBridge = setupPlaywrightIPC(ipcMain, app, browserWindow);
+  playwrightBridge.launchElectronPlaywright()  
+  // app.on("activate", () => {
+  //   if (BrowserWindow.getAllWindows().length === 0) {
+  //     createMainWindow();
+  //     createBrowserWindow();
+  //   }
+  // });
 });
 
 app.on("window-all-closed", () => {
