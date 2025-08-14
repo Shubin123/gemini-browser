@@ -1,6 +1,6 @@
 {
   "name": "gemini-browser",
-  "version": "0.0.9",
+  "version": "0.1.1",
   "description": "automated browsing using gemini-cli",
   "main": "main.js",
   "type": "module",
@@ -52,11 +52,9 @@
     "electron-rebuild": "^3.2.9"
   },
   "dependencies": {
+    "electron": "^37.2.3",
     "puppeteer-core": "~21.3.8",
     "puppeteer-in-electron": "^3.0.5"
-  },
-  "peerDependencies": {
-    "electron": "^37.2.3"
   },
   "build": {
     "appId": "com.shubinwang.gemini-browser",
@@ -70,7 +68,8 @@
       "index.html",
       "package.json",
       "node_modules/**/*",
-      "preload.cjs"
+      "preload.cjs",
+      "gemini.md"
     ],
     "asarUnpack": [
       "node_modules/get-port-cli/**/*",

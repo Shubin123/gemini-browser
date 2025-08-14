@@ -1,4 +1,5 @@
-import { BrowserWindow } from "electron";
+import electron from "electron";
+const { BrowserWindow } = electron;
 import path from "path";
 import { fileURLToPath } from "url";
 
@@ -8,7 +9,7 @@ const __dirname = path.dirname(__filename);
 let browserWindow = null;
 let isPlaywrightControlled = false;
 
-export function createBrowserWindow() {
+export async function createBrowserWindow() {
   if (browserWindow && !browserWindow.isDestroyed()) {
     return browserWindow;
   }
@@ -35,7 +36,7 @@ export function createBrowserWindow() {
   browserWindow.loadURL("https://google.com");
 
   // if (process.env.NODE_ENV === "development") {
-    browserWindow.webContents.openDevTools();
+    // browserWindow.webContents.openDevTools();
   // }
 
   // Clean up reference when window is closed

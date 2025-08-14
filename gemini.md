@@ -1,95 +1,9 @@
-# Gemini Browser Control Interface
-
-This document explains how to control the browser window through the Gemini CLI interface.
-
-## Browser Control Commands
-
-All browser commands must be prefixed with `!browser` followed by the command:
-
-
-1. Navigation Commands
-Command	Example	Description
-navigate [url]	!browser navigate https://google.com	Loads a specified URL
-back	!browser back	Goes back to previous page
-forward	!browser forward	Goes forward to next page
-refresh	!browser refresh	Reloads current page
-2. DOM Interaction Commands
-Command	Example	Description
-click [selector]	!browser click #submit-btn	Clicks an element
-input [selector] [text]	!browser input #search "AI"	Enters text into an input field
-select [selector] [value]	!browser select #country "US"	Selects dropdown option
-hover [selector]	!browser hover .menu-item	Hovers over an element
-3. Inspection Commands
-Command	Example	Description
-get [selector]	!browser get .product	Returns element details (tag, classes, bounds, etc.)
-exists [selector]	!browser exists .login-form	Checks if element exists
-text [selector]	!browser text h1	Gets element's text content
-html [selector]	!browser html .container	Gets element's inner HTML
-screenshot [selector?]	!browser screenshot #hero	Captures element/page screenshot
-4. JavaScript Execution
-Command	Example	Description
-eval [js-code]	!browser eval document.title	Executes JavaScript
-scroll [x] [y]	!browser scroll 0 500	Scrolls to position
-scrollTo [selector]	!browser scrollTo footer	Scrolls element into view
-5. Page State Commands
-Command	Example	Description
-url	!browser url	Gets current URL
-title	!browser title	Gets page title
-cookies	!browser cookies	Lists all cookies
-localStorage	!browser localStorage	Gets localStorage contents
-6. Utility Commands
-Command	Example	Description
-wait [ms]	!browser wait 2000	Waits specified milliseconds
-waitFor [selector]	!browser waitFor .loaded	Waits for element to appear
-history	!browser history	Shows navigation history
-viewport [width] [height]	!browser viewport 1024 768	Resizes browser window
-7. Advanced Commands
-Command	Example	Description
-xpath [xpath]	!browser xpath //button[@id='submit']	Uses XPath selector
-upload [selector] [path]	!browser upload #file-input ./test.pdf	Uploads a file
-download [url]	!browser download https://example.com/file.pdf	Triggers download
-
-
-
-Usage Examples
-1. E-commerce Checkout Automation
-
-
-!browser navigate https://shop.example.com
-!browser click .product-card:first-child
-!browser click #add-to-cart
-!browser wait 1000
-!browser click #checkout-button
-!browser input #email "user@example.com"
-!browser input #credit-card "4111111111111111"
-!browser click #place-order
-2. Data Extraction
-
-
-!browser navigate https://news.ycombinator.com
-!browser get .titleline => $titles
-!browser eval $titles.map(t => t.textContent)
-3. Form Testing
-
-
-!browser navigate https://example.com/contact
-!browser input #name "Test User"
-!browser input #message "This is a test message"
-!browser screenshot #form-section => $formScreenshot
-!browser click #submit
-!browser waitFor .success-message
-
-OBSERVATION SPACE: FRAME BUFFER and !browser get *
-ACTION SPACE: navigate, input and click
-
-
-_________
 # Browser Control Interface
 
 You can control a browser using !browser commands. Simply state the commands in your response.
 
 ## Available Commands
-
+### PLEASE FORMAT WITH NEWLINE ON EACH COMMAND
 ### Navigation
 - `!browser navigate [url]` - Navigate to a URL
 
@@ -188,6 +102,7 @@ The browser maintains an indexed list of actionable elements. Use these commands
 ## Example Workflows
 
 ### Basic Navigation and Interaction
+### PLEASE FORMAT WITH NEWLINE ON EACH COMMAND
 ```
 !browser navigate https://example.com
 !browser click .login-button
@@ -225,7 +140,6 @@ The browser maintains an indexed list of actionable elements. Use these commands
 **Action Space**: navigate, click, input, get, screenshot(SAVED IN /tmp), evaluate, observe, annotated-screenshot(DONT USE), action-space, action
 
 **Observation Space**: Frame buffer, element details from `get`, comprehensive page data from `observe`, annotated screenshots with element mapping, and actionable element indices from `action-space`
-_____
-example actions
+
 ACTION: go to cnn and get all button information. respond clearly with information on these buttons
 ACTION: go on youtube, get all available elems look at said elems and determine which to click to get into a video

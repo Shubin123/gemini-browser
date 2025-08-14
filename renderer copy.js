@@ -1,14 +1,10 @@
-// Enhanced Gemini CLI Interface - JavaScript
 let selectedImagePath = null;
 let isExecuting = false;
 let chatHistory = []; // Store conversation history
 let maxHistoryLength = 10; // Configurable history limit
-let systemPrompt = "";
-let lastSystemPrompt = ""; // Track the last system prompt to detect changes
 
 const elements = {
   model: document.getElementById("model"),
-  systemPrompt: document.getElementById("systemPrompt"),
   prompt: document.getElementById("prompt"),
   selectImageBtn: document.getElementById("selectImageBtn"),
   selectedFile: document.getElementById("selectedFile"),
@@ -25,97 +21,42 @@ const elements = {
   showHistoryBtn: document.getElementById("showHistoryBtn"),
 };
 
-// System prompt handling
-function handleSystemPromptChange() {
-  
-  const newSystemPrompt = elements.systemPrompt?.value.trim() || "";
-  
-  // Only update if the system prompt has actually changed
-  if (newSystemPrompt !== lastSystemPrompt) {
-    systemPrompt = newSystemPrompt;
-    lastSystemPrompt = newSystemPrompt;
-    
-    if (systemPrompt) {
-      appendOutput("🎯 System prompt updated\n", "info");
-      
-    } else {
-      appendOutput("🎯 System prompt cleared\n", "info");
-    }
-  }
-}
-
 // Chat history management
 function addToHistory(prompt, response) {
-  // Check if this exact exchange already exists to avoid duplicates
-  const isDuplicate = chatHistory.some(entry => 
-    entry.prompt.toLowerCase().trim() === prompt.toLowerCase().trim() &&
-    entry.response.toLowerCase().trim().substring(0, 200) === response.toLowerCase().trim().substring(0, 200)
-  );
+  chatHistory.push({
+    timestamp: new Date().toISOString(),
+    prompt: prompt,
+    response: response,
+    imagePath: selectedImagePath
+  });
   
-  if (!isDuplicate) {
-    chatHistory.push({
-      timestamp: new Date().toISOString(),
-      prompt: prompt,
-      response: response,
-      imagePath: selectedImagePath
-    });
-    
-    // Maintain history limit
-    if (chatHistory.length > maxHistoryLength) {
-      chatHistory = chatHistory.slice(-maxHistoryLength);
-    }
+  // Maintain history limit
+  if (chatHistory.length > maxHistoryLength) {
+    chatHistory = chatHistory.slice(-maxHistoryLength);
   }
   
   updateHistoryDisplay();
 }
 
 function buildContextualPrompt(currentPrompt) {
-  let fullPrompt = "";
-  let includedContent = new Set();
-  
-  // Add system prompt if exists (only once at the beginning)
-  if (systemPrompt) {
-    fullPrompt += `SYSTEM: ${systemPrompt}\n\n`;
-    includedContent.add(systemPrompt.toLowerCase().trim());
+  if (chatHistory.length === 0) {
+    return currentPrompt;
   }
   
-  // Add unique conversation history
-  if (chatHistory.length > 0) {
-    const uniqueHistory = [];
-    
-    // Filter out duplicate prompts and responses
-    chatHistory.forEach((entry) => {
-      const promptKey = entry.prompt.toLowerCase().trim();
-      const responseKey = entry.response.toLowerCase().trim().substring(0, 200); // Compare first 200 chars
-      const entryKey = `${promptKey}::${responseKey}`;
-      
-      // Only include if this exchange is unique
-      if (!includedContent.has(entryKey) && !includedContent.has(promptKey)) {
-        uniqueHistory.push(entry);
-        includedContent.add(entryKey);
-        includedContent.add(promptKey);
-      }
-    });
-    
-    // Add unique history to prompt
-    if (uniqueHistory.length > 0) {
-      fullPrompt += "Previous conversation context:\n";
-      uniqueHistory.forEach((entry) => {
-        fullPrompt += `\nUser: ${entry.prompt}`;
-        fullPrompt += `\nAssistant: ${entry.response}`;
-        if (entry.imagePath) {
-          fullPrompt += ` [Image: ${entry.imagePath.split(/[\\/]/).pop()}]`;
-        }
-      });
-      fullPrompt += `\n\nCurrent request: ${currentPrompt}`;
-    } else {
-      fullPrompt += currentPrompt;
+  // Build context from recent history
+  let contextPrompt = "Previous conversation context:\n";
+  
+  chatHistory.forEach((entry, index) => {
+    contextPrompt += `\nUser: ${entry.prompt}`;
+    contextPrompt += `\nAssistant: ${entry.response}`;
+    if (entry.imagePath) {
+      contextPrompt += ` [Image: ${entry.imagePath.split(/[\\/]/).pop()}]`;
     }
-  } else {
-    fullPrompt += currentPrompt;
-  }
+  });
   
-  return fullPrompt;
+  contextPrompt += `\n\nCurrent request: ${currentPrompt}`;
+  
+  return contextPrompt;
 }
 
 function clearChatHistory() {
@@ -194,18 +135,15 @@ elements.executeBtn.addEventListener("click", async () => {
     yolo: elements.yolo.checked,
   };
 
-  // Build contextual prompt with history and system prompt
+  // Build contextual prompt with history
   const contextualPrompt = buildContextualPrompt(originalPrompt);
-  const hasContext = chatHistory.length > 0 || systemPrompt;
+  const isContextual = chatHistory.length > 0;
 
-  appendOutput(`🚀 Executing Gemini CLI... ${hasContext ? '(with context)' : ''}\n`, "info");
+  appendOutput(`🚀 Executing Gemini CLI... ${isContextual ? '(with context)' : ''}\n`, "info");
   appendOutput(`Model: ${options.model || "default"}\n`, "info");
-  appendOutput(`Prompt: ${originalPrompt}\n`, "info");
-  if (systemPrompt) {
-    appendOutput(`System Prompt: Active (${systemPrompt.length} chars)\n`, "info");
-  }
-  if (chatHistory.length > 0) {
-    appendOutput(`Context: ${chatHistory.length} previous exchanges\n`, "info");
+  appendOutput(`Original Prompt: ${originalPrompt}\n`, "info");
+  if (isContextual) {
+    appendOutput(`Context Length: ${chatHistory.length} previous exchanges\n`, "info");
   }
   if (selectedImagePath) {
     appendOutput(`Image: ${selectedImagePath}\n`, "info");
@@ -238,7 +176,7 @@ elements.executeBtn.addEventListener("click", async () => {
     // Execute as normal Gemini prompt with context
     else {
       const result = await window.electronAPI.executeGemini({
-        prompt: contextualPrompt, // Use contextual prompt with system prompt and history
+        prompt: contextualPrompt, // Use contextual prompt instead of original
         captureScreen: false,
         options,
         imagePath: selectedImagePath
@@ -284,13 +222,12 @@ elements.executeBtn.addEventListener("click", async () => {
 
     // Add to chat history (use original prompt, not contextual one)
     if (assistantResponse) {
-      entry.response = assistantResponse
       addToHistory(originalPrompt, assistantResponse);
     }
 
   } catch (error) {
     console.error("Execution error:", error);
-    // appendOutput(`💥 Fatal error: ${error.message}\n`, "error");
+    appendOutput(`💥 Fatal error: ${error.message}\n`, "error");
     
     // Enhanced error reporting for browser commands
     if (error.message.includes('Browser command')) {
@@ -308,11 +245,6 @@ elements.executeBtn.addEventListener("click", async () => {
     elements.executeBtn.disabled = true;
   }
 });
-// document.addEventListener("DOMContentLoaded", () => {
-// System prompt event listener
-if (elements.systemPrompt) {
-  elements.systemPrompt.addEventListener("input", handleSystemPromptChange);
-}
 
 // Chat history controls
 if (elements.clearHistoryBtn) {
@@ -339,18 +271,14 @@ if (elements.historyLengthInput) {
   });
 }
 
-// });
-
 // Listen for real-time output
-if (window.electronAPI && window.electronAPI.onGeminiOutput) {
-  window.electronAPI.onGeminiOutput((data) => {
-    if (data.type === "stdout") {
-      appendOutput(data.data, "stdout-live");
-    } else if (data.type === "stderr") {
-      appendOutput(data.data, "stderr-live");
-    }
-  });
-}
+window.electronAPI.onGeminiOutput((data) => {
+  if (data.type === "stdout") {
+    appendOutput(data.data, "stdout-live");
+  } else if (data.type === "stderr") {
+    appendOutput(data.data, "stderr-live");
+  }
+});
 
 // Clear output (but preserve history)
 elements.clearBtn.addEventListener("click", () => {
@@ -380,6 +308,7 @@ function clearOutput() {
 
 function appendOutput(text, type = "normal") {
   if (
+    // elements.output.innerHTML.includes("Output will appear here") ||
     elements.output.innerHTML.includes("Output cleared...")
   ) {
     elements.output.innerHTML = "";
@@ -423,94 +352,94 @@ elements.prompt.addEventListener("input", () => {
 // Browser control panel code (unchanged)
 document
   .getElementById("browserControlBtn")
-  ?.addEventListener("click", () => {
+  .addEventListener("click", () => {
     const panel = document.getElementById("browserControlPanel");
-    if (panel) {
-      panel.style.display =
-        panel.style.display === "none" ? "block" : "none";
-    }
+    panel.style.display =
+      panel.style.display === "none" ? "block" : "none";
   });
 
 document
   .getElementById("toggleBrowserBtn")
-  ?.addEventListener("click", async () => {
-    if (window.browserController && window.browserController.toggle) {
-      const isVisible = await window.browserController.toggle();
-      appendOutput(
-        `Browser window ${isVisible ? "shown" : "hidden"}\n`,
-        "info"
-      );
-    }
+  .addEventListener("click", async () => {
+    const isVisible = await window.browserController.toggle();
+    appendOutput(
+      `Browser window ${isVisible ? "shown" : "hidden"}\n`,
+      "info"
+    );
   });
 
 document
   .getElementById("navigateBtn")
-  ?.addEventListener("click", async () => {
-    const urlInput = document.getElementById("browserUrl");
-    const url = urlInput?.value.trim();
+  .addEventListener("click", async () => {
+    const url = document.getElementById("browserUrl").value.trim();
     if (!url) return;
 
-    if (window.browserController && window.browserController.navigate) {
-      const result = await window.browserController.navigate(url);
-      appendOutput(
-        `Navigated to: ${url}\n`,
-        result.success ? "success" : "error"
-      );
-    }
+    const result = await window.browserController.navigate(url);
+    appendOutput(
+      `Navigated to: ${url}\n`,
+      result.success ? "success" : "error"
+    );
+  });
+
+document
+  .getElementById("executeBtn")
+  .addEventListener("click", async () => {
+    const code = document.getElementById("domQuery").value.trim();
+    if (!code) return;
+
+    const result = await window.browserController.execute(code);
+    appendOutput(
+      `Execution result: ${JSON.stringify(result, null, 2)}\n`,
+      result.success ? "success" : "error"
+    );
   });
 
 document
   .getElementById("inspectBtn")
-  ?.addEventListener("click", async () => {
-    const queryInput = document.getElementById("domQuery");
-    const selector = queryInput?.value.trim();
+  .addEventListener("click", async () => {
+    const selector = document.getElementById("domQuery").value.trim();
     if (!selector) return;
 
-    if (window.browserController && window.browserController.getDOM) {
-      const domInfo = await window.browserController.getDOM(selector);
-      if (domInfo) {
-        appendOutput(
-          `DOM Inspection:\n${JSON.stringify(domInfo, null, 2)}\n`,
-          "info"
-        );
-      } else {
-        appendOutput(`Element not found: ${selector}\n`, "error");
-      }
+    const domInfo = await window.browserController.getDOM(selector);
+    if (domInfo) {
+      appendOutput(
+        `DOM Inspection:\n${JSON.stringify(domInfo, null, 2)}\n`,
+        "info"
+      );
+    } else {
+      appendOutput(`Element not found: ${selector}\n`, "error");
     }
   });
 
 document
   .getElementById("clickBtn")
-  ?.addEventListener("click", async () => {
-    const selectorInput = document.getElementById("elementSelector");
-    const selector = selectorInput?.value.trim();
+  .addEventListener("click", async () => {
+    const selector = document
+      .getElementById("elementSelector")
+      .value.trim();
     if (!selector) return;
 
-    if (window.browserController && window.browserController.click) {
-      const result = await window.browserController.click(selector);
-      appendOutput(
-        `Clicked element: ${selector}\n`,
-        result.success ? "success" : "error"
-      );
-    }
+    const result = await window.browserController.click(selector);
+    appendOutput(
+      `Clicked element: ${selector}\n`,
+      result.success ? "success" : "error"
+    );
   });
 
 document
   .getElementById("inputBtn")
-  ?.addEventListener("click", async () => {
-    const selectorInput = document.getElementById("elementSelector");
-    const valueInput = document.getElementById("elementValue");
-    const selector = selectorInput?.value.trim();
-    const value = valueInput?.value.trim();
+  .addEventListener("click", async () => {
+    const selector = document
+      .getElementById("elementSelector")
+      .value.trim();
+    const value = document.getElementById("elementValue").value.trim();
     if (!selector || !value) return;
 
-    if (window.browserController && window.browserController.input) {
-      const result = await window.browserController.input(selector, value);
-      appendOutput(
-        `Set value "${value}" on element: ${selector}\n`,
-        result.success ? "success" : "error"
-      );
-    }
+    const result = await window.browserController.input(selector, value);
+    appendOutput(
+      `Set value "${value}" on element: ${selector}\n`,
+      result.success ? "success" : "error"
+    );
   });
 
 // Initial state

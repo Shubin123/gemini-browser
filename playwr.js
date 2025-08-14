@@ -1,11 +1,13 @@
 import pie from 'puppeteer-in-electron';
-import {app} from 'electron'
+import electron from "electron";
+const { app } = electron;
+// import {app} from 'electron'
 import puppeteer from 'puppeteer-core';
 import { getBrowserWindow, setBrowserWindow, setPlaywrightControlled } from './window.js';
 
 pie.initialize(app);
 
-export function setupPlaywrightIPC(ipcMain, app, existingBrowserWindow = null) {
+export function setupPlaywrightIPC(app, existingBrowserWindow) {
   let browser = null;
   let page = null;
 
@@ -16,14 +18,8 @@ export function setupPlaywrightIPC(ipcMain, app, existingBrowserWindow = null) {
         
         browser = await pie.connect(app || require('electron').app, puppeteer);
         
-        // If we already have a browser window, use it
-        let browserWindow = existingBrowserWindow || getBrowserWindow();
-        
-        if (!browserWindow) {
-          // Import here to avoid circular dependency
-          const { createBrowserWindow } = await import('./window.js');
-          browserWindow = createBrowserWindow();
-        }
+        // puppeteer should only look at the existing browser window never launch its own.
+        let browserWindow = existingBrowserWindow
 
         // Get the page from the browser window
         page = await pie.getPage(browser, browserWindow);
@@ -47,7 +43,7 @@ export function setupPlaywrightIPC(ipcMain, app, existingBrowserWindow = null) {
     },
 
     async getObservation() {
-      if (!page) throw new Error('Playwright not initialized');
+      if (!page) throw new Error('Puppeteer not initialized');
       
       // Get page content and interactive elements
       const observation = await page.evaluate(() => {
@@ -83,7 +79,7 @@ export function setupPlaywrightIPC(ipcMain, app, existingBrowserWindow = null) {
     },
 
     async createAnnotatedScreenshot() {
-      // if (!page) throw new Error('Playwright not initialized');
+      // if (!page) throw new Error('Puppeteer not initialized');
       
       // const screenshot = await page.screenshot({ fullPage: true });
       // const observation = await this.getObservation();
@@ -97,7 +93,7 @@ export function setupPlaywrightIPC(ipcMain, app, existingBrowserWindow = null) {
     },
 
     async getActionableElements() {
-      if (!page) throw new Error('Playwright not initialized');
+      if (!page) throw new Error('Puppeteer not initialized');
       
       return await page.evaluate(() => {
         const elements = Array.from(document.querySelectorAll('*')).filter(el => {
@@ -143,7 +139,7 @@ export function setupPlaywrightIPC(ipcMain, app, existingBrowserWindow = null) {
     },
 
     async takeAction(actionIndex, actionType = 'click', inputValue = null) {
-      if (!page) throw new Error('Playwright not initialized');
+      if (!page) throw new Error('Puppeteer not initialized');
       
       const elements = await this.getActionableElements();
       const element = elements[actionIndex];
@@ -206,15 +202,42 @@ export function setupPlaywrightIPC(ipcMain, app, existingBrowserWindow = null) {
       return selector;
     },
 
-    async cleanup() {
-      try {
-        if (page) await page.close();
-        if (browser) await browser.close();
-        setPlaywrightControlled(false);
-      } catch (error) {
-        console.error('Puppeteer cleanup error:', error);
+   async cleanup() {
+  // Check if page is still connected before closing
+  if (page) {
+    try {
+      if (!page.isClosed()) {
+        await page.close();
+      }
+    } catch (error) {
+      // Ignore protocol errors - page is already closed
+      if (!error.message.includes('Protocol error') && !error.message.includes('Connection closed')) {
+        console.error('Error closing page:', error);
       }
     }
+    page = null;
+  }
+
+  // Close browser
+  if (browser) {
+    try {
+      if (browser.isConnected()) {
+        await browser.disconnect();
+      }
+    } catch (error) {
+      console.error('Error disconnecting browser:', error);
+    }
+    browser = null;
+  }
+
+  // Reset state
+  try {
+    setPlaywrightControlled(false);
+  } catch (error) {
+    console.error('Error resetting playwright state:', error);
+  }
+}
+
   };
 
   return playwrightBridge;

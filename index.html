@@ -11,19 +11,35 @@
         box-sizing: border-box;
       }
 
+      :root {
+        --primary-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        --secondary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+        --success-gradient: linear-gradient(135deg, #43a047 0%, #66bb6a 100%);
+        --danger-gradient: linear-gradient(135deg, #ff5722 0%, #ff9800 100%);
+        --dark-bg: #1a1a2e;
+        --card-bg: rgba(255, 255, 255, 0.98);
+        --glass-bg: rgba(255, 255, 255, 0.12);
+        --text-primary: #2c3e50;
+        --text-secondary: #64748b;
+        --border-color: rgba(255, 255, 255, 0.18);
+        --shadow-light: 0 8px 32px rgba(31, 38, 135, 0.37);
+        --shadow-heavy: 0 15px 35px rgba(31, 38, 135, 0.2);
+      }
+
       body {
-        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
-          sans-serif;
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+        background: var(--primary-gradient);
         min-height: 100vh;
         display: flex;
         flex-direction: column;
+        font-size: 14px;
+        line-height: 1.6;
       }
 
       .container {
-        max-width: 1000px;
+        max-width: 1400px;
         margin: 0 auto;
-        padding: 20px;
+        padding: 15px;
         flex-grow: 1;
         display: flex;
         flex-direction: column;
@@ -32,18 +48,30 @@
       .header {
         text-align: center;
         color: white;
-        margin-bottom: 30px;
+        margin-bottom: 20px;
+        backdrop-filter: blur(20px);
+        background: var(--glass-bg);
+        border: 1px solid var(--border-color);
+        border-radius: 16px;
+        padding: 20px;
+        box-shadow: var(--shadow-light);
       }
 
       .header h1 {
-        font-size: 2.5rem;
-        margin-bottom: 10px;
-        text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+        font-size: 2.2rem;
+        font-weight: 700;
+        margin-bottom: 6px;
+        text-shadow: 0 2px 20px rgba(0, 0, 0, 0.3);
+        background: linear-gradient(135deg, #fff 0%, #f0f9ff 100%);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
       }
 
       .header p {
-        font-size: 1.1rem;
+        font-size: 1rem;
         opacity: 0.9;
+        font-weight: 300;
       }
 
       .main-content {
@@ -55,21 +83,57 @@
 
       .input-panel,
       .output-panel {
-        background: rgba(255, 255, 255, 0.95);
-        border-radius: 15px;
-        padding: 25px;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
-        backdrop-filter: blur(10px);
-        border: 1px solid rgba(255, 255, 255, 0.2);
+        background: var(--card-bg);
+        border-radius: 18px;
+        padding: 22px;
+        box-shadow: var(--shadow-heavy);
+        backdrop-filter: blur(20px);
+        border: 1px solid var(--border-color);
+        transition: transform 0.3s ease, box-shadow 0.3s ease;
+      }
+
+      .input-panel:hover,
+      .output-panel:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 20px 40px rgba(31, 38, 135, 0.3);
       }
 
       .panel-title {
-        font-size: 1.3rem;
+        font-size: 1.4rem;
         font-weight: 600;
-        margin-bottom: 20px;
-        color: #333;
-        border-bottom: 2px solid #667eea;
-        padding-bottom: 10px;
+        margin-bottom: 25px;
+        color: var(--text-primary);
+        position: relative;
+        padding-bottom: 12px;
+      }
+
+      .panel-title::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 60px;
+        height: 3px;
+        background: var(--secondary-gradient);
+        border-radius: 2px;
+      }
+
+      .form-section {
+        margin-bottom: 25px;
+        padding: 20px;
+        background: rgba(102, 126, 234, 0.04);
+        border-radius: 16px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
+      }
+
+      .section-title {
+        font-size: 1rem;
+        font-weight: 600;
+        color: var(--text-primary);
+        margin-bottom: 15px;
+        display: flex;
+        align-items: center;
+        gap: 8px;
       }
 
       .form-group {
@@ -80,18 +144,22 @@
         display: block;
         margin-bottom: 8px;
         font-weight: 500;
-        color: #555;
+        color: var(--text-secondary);
+        font-size: 0.9rem;
       }
 
       .form-group input,
       .form-group select,
       .form-group textarea {
         width: 100%;
-        padding: 12px;
-        border: 2px solid #e0e0e0;
-        border-radius: 8px;
+        padding: 14px 16px;
+        border: 2px solid transparent;
+        border-radius: 12px;
         font-size: 14px;
-        transition: border-color 0.3s ease;
+        background: rgba(248, 250, 252, 0.8);
+        color: var(--text-primary);
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        font-family: inherit;
       }
 
       .form-group input:focus,
@@ -99,13 +167,21 @@
       .form-group textarea:focus {
         outline: none;
         border-color: #667eea;
-        box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.12);
+        background: rgba(255, 255, 255, 0.95);
+        transform: translateY(-1px);
       }
 
       .form-group textarea {
-        min-height: 120px;
+        min-height: 100px;
         resize: vertical;
-        font-family: inherit;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
+      }
+
+      .system-prompt-textarea {
+        min-height: 80px !important;
+        font-size: 13px;
+        line-height: 1.5;
       }
 
       .checkbox-group {
@@ -119,184 +195,369 @@
         display: flex;
         align-items: center;
         gap: 8px;
+        padding: 8px 12px;
+        background: rgba(255, 255, 255, 0.6);
+        border-radius: 8px;
+        transition: all 0.2s ease;
+      }
+
+      .checkbox-item:hover {
+        background: rgba(255, 255, 255, 0.8);
+        transform: translateY(-1px);
       }
 
       .checkbox-item input[type="checkbox"] {
         width: auto;
         margin: 0;
+        accent-color: #667eea;
       }
 
-      .file-input-wrapper {
-        position: relative;
-        overflow: hidden;
-        display: inline-block;
-        width: 100%;
+      .button-group {
+        display: flex;
+        gap: 12px;
+        flex-wrap: wrap;
       }
 
-      .file-input-button {
-        background: linear-gradient(45deg, #667eea, #764ba2);
-        color: white;
+      .btn {
         padding: 12px 20px;
         border: none;
-        border-radius: 8px;
+        border-radius: 12px;
         cursor: pointer;
         font-size: 14px;
-        width: 100%;
-        transition: transform 0.2s ease;
+        font-weight: 500;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        position: relative;
+        overflow: hidden;
       }
 
-      .file-input-button:hover {
-        transform: translateY(-1px);
-        box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+      .btn::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        width: 0;
+        height: 0;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        transition: all 0.3s ease;
       }
 
-      .execute-button {
-        background: linear-gradient(45deg, #43a047, #66bb6a);
+      .btn:hover::before {
+        width: 300px;
+        height: 300px;
+      }
+
+      .btn-primary {
+        background: var(--secondary-gradient);
         color: white;
-        padding: 15px 30px;
-        border: none;
-        border-radius: 8px;
-        cursor: pointer;
+        width: 100%;
+        justify-content: center;
+        padding: 16px 24px;
         font-size: 16px;
         font-weight: 600;
-        width: 100%;
-        transition: all 0.3s ease;
-        margin-top: 20px;
       }
 
-      .execute-button:hover {
+      .btn-secondary {
+        background: var(--primary-gradient);
+        color: white;
+        flex: 1;
+      }
+
+      .btn-success {
+        background: var(--success-gradient);
+        color: white;
+      }
+
+      .btn-danger {
+        background: var(--danger-gradient);
+        color: white;
+      }
+
+      .btn:hover {
         transform: translateY(-2px);
-        box-shadow: 0 6px 20px rgba(67, 160, 71, 0.4);
+        box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
       }
 
-      .execute-button:disabled {
-        background: #ccc;
+      .btn:active {
+        transform: translateY(0);
+      }
+
+      .btn:disabled {
+        background: #e2e8f0 !important;
+        color: #94a3b8 !important;
         cursor: not-allowed;
-        transform: none;
-        box-shadow: none;
+        transform: none !important;
+        box-shadow: none !important;
+      }
+
+      .file-input-section {
+        background: rgba(67, 160, 71, 0.05);
+        border: 2px dashed rgba(67, 160, 71, 0.2);
+        border-radius: 16px;
+        padding: 20px;
+        text-align: center;
+        transition: all 0.3s ease;
+      }
+
+      .file-input-section:hover {
+        border-color: rgba(67, 160, 71, 0.4);
+        background: rgba(67, 160, 71, 0.08);
+      }
+
+      .selected-file {
+        margin-top: 12px;
+        padding: 12px 16px;
+        background: rgba(67, 160, 71, 0.1);
+        border-radius: 10px;
+        font-size: 13px;
+        color: #2e7d32;
+        border: 1px solid rgba(67, 160, 71, 0.2);
       }
 
       .output-container {
-        background: #1e1e1e;
-        color: #f0f0f0;
-        border-radius: 8px;
-        padding: 20px;
-        font-family: "Monaco", "Menlo", "Ubuntu Mono", monospace;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        color: #f8fafc;
+        border-radius: 16px;
+        padding: 24px;
+        font-family: 'JetBrains Mono', 'Fira Code', monospace;
         font-size: 13px;
-        line-height: 1.5;
-        max-height: 400px;
+        line-height: 1.6;
+        max-height: 500px;
         overflow-y: auto;
         white-space: pre-wrap;
         word-wrap: break-word;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+      }
+
+      .output-container::-webkit-scrollbar {
+        width: 8px;
+      }
+
+      .output-container::-webkit-scrollbar-track {
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+      }
+
+      .output-container::-webkit-scrollbar-thumb {
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 4px;
       }
 
       .status-bar {
         display: flex;
         justify-content: space-between;
         align-items: center;
-        margin-bottom: 15px;
-        padding: 10px;
-        background: rgba(102, 126, 234, 0.1);
-        border-radius: 8px;
+        margin-bottom: 20px;
+        padding: 12px 20px;
+        background: rgba(102, 126, 234, 0.06);
+        border-radius: 12px;
+        border: 1px solid rgba(102, 126, 234, 0.1);
       }
 
       .status-indicator {
-        padding: 5px 12px;
+        padding: 6px 16px;
         border-radius: 20px;
         font-size: 12px;
         font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
 
       .status-ready {
-        background: #e8f5e8;
+        background: linear-gradient(135deg, #e8f5e8 0%, #f1f8e9 100%);
         color: #2e7d32;
+        border: 1px solid rgba(46, 125, 50, 0.2);
       }
 
       .status-running {
-        background: #fff3e0;
+        background: linear-gradient(135deg, #fff3e0 0%, #fce4ec 100%);
         color: #f57c00;
+        border: 1px solid rgba(245, 124, 0, 0.2);
       }
 
       .status-error {
-        background: #ffebee;
+        background: linear-gradient(135deg, #ffebee 0%, #fce4ec 100%);
         color: #c62828;
+        border: 1px solid rgba(198, 40, 40, 0.2);
       }
 
-      .clear-button {
-        background: #f44336;
-        color: white;
-        border: none;
-        padding: 6px 12px;
-        border-radius: 6px;
-        cursor: pointer;
-        font-size: 12px;
+      .chat-controls {
+        display: flex;
+        gap: 12px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin: 15px 0;
+        padding: 16px;
+        background: rgba(74, 192, 252, 0.05);
+        border-radius: 12px;
+        border: 1px solid rgba(74, 192, 252, 0.1);
       }
 
-      .selected-file {
+      .history-counter {
+        background: rgba(74, 192, 252, 0.1);
+        color: #0369a1;
+        padding: 4px 12px;
+        border-radius: 16px;
+        font-size: 11px;
+        font-weight: 600;
+        border: 1px solid rgba(74, 192, 252, 0.2);
+      }
+
+      .history-input {
+        width: 70px !important;
+        padding: 6px 10px !important;
+        font-size: 12px !important;
+      }
+
+      .browser-controls {
+        background: rgba(139, 92, 246, 0.05);
+        border: 1px solid rgba(139, 92, 246, 0.1);
+        border-radius: 16px;
+        padding: 20px;
         margin-top: 10px;
-        padding: 10px;
-        background: #e8f5e8;
-        border-radius: 6px;
-        font-size: 13px;
-        color: #2e7d32;
+        transition: all 0.3s ease;
       }
 
-      @media (max-width: 768px) {
+      .browser-controls.collapsed {
+        max-height: 0;
+        padding: 0 20px;
+        overflow: hidden;
+        margin-top: 0;
+        opacity: 0;
+      }
+
+      .help-text {
+        color: #64748b;
+        font-size: 11px;
+        margin-top: 6px;
+        font-style: italic;
+      }
+
+      @media (max-width: 1024px) {
         .main-content {
           grid-template-columns: 1fr;
         }
+        
+        .container {
+          padding: 15px;
+        }
+        
+        .header h1 {
+          font-size: 2.2rem;
+        }
       }
+
+      @media (max-width: 768px) {
+        .button-group {
+          flex-direction: column;
+        }
+        
+        .chat-controls {
+          flex-direction: column;
+          align-items: stretch;
+        }
+        
+        .btn {
+          width: 100%;
+          justify-content: center;
+        }
+      }
+
+      /* Animation keyframes */
+      @keyframes pulse {
+        0%, 100% { opacity: 1; }
+        50% { opacity: 0.7; }
+      }
+
+      .loading {
+        animation: pulse 2s infinite;
+      }
+
+      /* Custom syntax highlighting for output */
+      .output-success { color: #10b981; }
+      .output-error { color: #ef4444; }
+      .output-info { color: #3b82f6; }
+      .output-warning { color: #f59e0b; }
+      .output-stdout { color: #f8fafc; }
+      .output-stderr { color: #fca5a5; }
     </style>
-
-    <script src="browserControl.js"></script>
-
-    <!-- <script src="geminiBrowser.js"></script> -->
   </head>
   <body>
     <div class="container">
       <div class="header">
         <h1>🤖 Gemini CLI Interface</h1>
-        <p>Execute Gemini AI commands with a beautiful interface</p>
+        <p>Advanced AI command interface with contextual conversations</p>
       </div>
 
       <div class="main-content">
         <div class="input-panel">
           <h2 class="panel-title">Configuration</h2>
 
-         <div class="form-group">
-  <label for="model">Model:</label>
-    <select id="model">
-    <option value="">Default Model</option>
-    <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
-    <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
-    <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
-  </select>
-</div>
-
-          <div class="form-group">
-            <label for="prompt">Prompt:</label>
-            <textarea
-              id="prompt"
-              placeholder="Enter your prompt here..."
-            ></textarea>
+          <!-- System Prompt Section - Collapsible -->
+          <div class="form-section">
+            <div class="section-title" id="systemPromptToggle" style="cursor: pointer; user-select: none;">
+              🎯 System Prompt <span id="systemPromptIcon">▶</span>
+            </div>
+            <div id="systemPromptSection" class="collapsible-content collapsed" style="max-height: 0; overflow: hidden;">
+              <div class="form-group">
+                <label for="systemPrompt">System Instructions (set once):</label>
+                <textarea
+                  id="systemPrompt"
+                  class="system-prompt-textarea"
+                  placeholder="Enter system instructions that will persist throughout the conversation..."
+                ></textarea>
+                <div class="help-text">This prompt will be included in every request automatically</div>
+              </div>
+            </div>
           </div>
 
-          <div class="form-group">
-            <label>Image (Optional):</label>
-            <div class="file-input-wrapper">
-              <button class="file-input-button" id="selectImageBtn">
+          <!-- Model & Prompt Section -->
+          <div class="form-section">
+            <div class="section-title">
+              ⚙️ Model & Prompt
+            </div>
+            <div class="form-group">
+              <label for="model">Model:</label>
+              <select id="model">
+                <option value="gemini-2.5-flash">Gemini 2.5 Flash</option>
+                <option value="gemini-2.5-pro">Gemini 2.5 Pro</option>
+                
+                <option value="gemini-2.5-flash-lite">Gemini 2.5 Flash-Lite</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="prompt">Prompt:</label>
+              <textarea
+                id="prompt"
+                placeholder="Enter your prompt here..."
+              ></textarea>
+            </div>
+          </div>
+
+          <!-- Image Upload Section -->
+          <div class="form-section">
+            <div class="section-title">
+              🖼️ Image Upload
+            </div>
+            <div class="file-input-section">
+              <button class="btn btn-success" id="selectImageBtn">
                 📁 Select Image
               </button>
+              <div id="selectedFile" class="selected-file" style="display: none"></div>
             </div>
-            <div
-              id="selectedFile"
-              class="selected-file"
-              style="display: none"
-            ></div>
           </div>
 
-          <div class="form-group">
-            <label>Options:</label>
+          <!-- Options Section -->
+          <div class="form-section">
+            <div class="section-title">
+              🔧 Options & Controls
+            </div>
             <div class="checkbox-group">
               <div class="checkbox-item">
                 <input type="checkbox" id="sandbox" />
@@ -311,102 +572,50 @@
                 <label for="yolo">YOLO Mode</label>
               </div>
             </div>
-          </div>
-
-          <!-- Add to your input panel -->
-          <div class="form-group">
-            <label>Browser Control:</label>
-            <div style="display: flex; gap: 10px; margin-top: 10px">
-              <button id="toggleBrowserBtn" class="file-input-button">
-                🖥️ Toggle Browser
-              </button>
-              <button id="browserControlBtn" class="file-input-button">
-                🕹️ Show Controls
-              </button>
-            </div>
-
-            <div
-              id="browserControlPanel"
-              style="display: none; margin-top: 15px"
-            >
-              <div
-                style="
-                  display: grid;
-                  grid-template-columns: 1fr auto;
-                  gap: 10px;
-                "
-              >
-                <input type="text" id="browserUrl" placeholder="Enter URL" />
-                <button id="navigateBtn" class="file-input-button">Go</button>
-              </div>
-
-              <div style="margin-top: 10px">
-                <textarea
-                  id="domQuery"
-                  placeholder="DOM Query or JavaScript"
-                  style="width: 100%; min-height: 60px"
-                ></textarea>
-                <div style="display: flex; gap: 10px; margin-top: 5px">
-                  <button id="inspectBtn" class="file-input-button">
-                    Inspect
-                  </button>
-                </div>
-              </div>
-
-              <div style="margin-top: 10px">
-                <input
-                  type="text"
-                  id="elementSelector"
-                  placeholder="Element selector"
-                />
-                <div style="display: flex; gap: 10px; margin-top: 5px">
-                  <button id="clickBtn" class="file-input-button">Click</button>
-                  <button id="inputBtn" class="file-input-button">
-                    Set Value
-                  </button>
-                  <input
-                    type="text"
-                    id="elementValue"
-                    placeholder="Value"
-                    style="flex: 1"
-                  />
-                </div>
+            
+            <!-- Unified Browser Controls -->
+            <div style="margin-top: 15px; padding-top: 15px; border-top: 1px solid rgba(102, 126, 234, 0.1);">
+              <div class="button-group">
+                <button id="toggleBrowserBtn" class="btn btn-secondary">
+                  🖥️ Toggle Browser
+                </button>
+                <input type="text" id="browserUrl" placeholder="Enter URL to navigate" style="flex: 1;" />
+                <button id="navigateBtn" class="btn btn-secondary">Go</button>
               </div>
             </div>
           </div>
 
-          <!-- <button class="execute-button" id="executeBtn">
+          <!-- Chat History Controls -->
+          <div class="chat-controls">
+            <button id="showHistoryBtn" class="btn btn-secondary" title="Show conversation history">
+              📚 History <span id="historyCount" class="history-counter">(0/0)</span>
+            </button>
+            
+            <button id="clearHistoryBtn" class="btn btn-danger" title="Clear conversation history">
+              🗑️ Clear
+            </button>
+            
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <label for="historyLengthInput" style="font-size: 12px; color: #64748b;">Max:</label>
+              <input 
+                type="number" 
+                id="historyLengthInput" 
+                min="1" 
+                max="50" 
+                value="10" 
+                class="history-input"
+              />
+            </div>
+            
+            <small class="help-text">
+              💡 Context automatically included in prompts
+            </small>
+          </div>
+
+          <!-- Execute Button -->
+          <button id="executeBtn" class="btn btn-primary" disabled>
             🚀 Execute Gemini CLI
-          </button> -->
-
-          <button id="executeBtn" class="file-input-button">Execute</button>
-
-          <!-- Add this section to your existing HTML, perhaps near the execute button -->
-<div class="chat-history-controls" style="display: flex; gap: 10px; align-items: center; margin: 10px 0; flex-wrap: wrap;">
-  <button id="showHistoryBtn" title="Show conversation history">
-    📚 Show History <span id="historyCount">(0/0)</span>
-  </button>
-  
-  <button id="clearHistoryBtn" title="Clear conversation history" style="background-color: #ff6b6b;">
-    🗑️ Clear History
-  </button>
-  
-  <div style="display: flex; align-items: center; gap: 5px;">
-    <label for="historyLengthInput" style="font-size: 12px;">Max History:</label>
-    <input 
-      type="number" 
-      id="historyLengthInput" 
-      min="1" 
-      max="50" 
-      value="10" 
-      style="width: 60px; padding: 2px 5px; border: 1px solid #333; background: #2a2a2a; color: #f0f0f0; border-radius: 3px;"
-    />
-  </div>
-  
-  <small style="color: #888; font-size: 11px;">
-    💡 Context is automatically included in prompts
-  </small>
-</div>
+          </button>
         </div>
 
         <div class="output-panel">
@@ -416,19 +625,44 @@
             <div class="status-indicator status-ready" id="statusIndicator">
               Ready
             </div>
-            <button class="clear-button" id="clearBtn">Clear Output</button>
+            <button class="btn btn-danger" id="clearBtn" style="padding: 6px 12px; font-size: 12px;">
+              Clear Output
+            </button>
           </div>
 
           <div class="output-container" id="output">
-            <div style="color: #888; font-style: italic">
-              Output will appear here when you execute the Gemini CLI...
+            <div style="color: #64748b; font-style: italic; text-align: center; padding: 40px 20px;">
+              <!-- 🎯 Output will appear here when you execute the Gemini CLI... -->
+              <br><br>
+              <!-- <small style="opacity: 0.7;">Pro tip: Set your system prompt first, then start chatting!</small> -->
             </div>
           </div>
         </div>
       </div>
     </div>
 
-    <script src="renderer.js" >
+    <script src="renderer.js"></script>
+    <script>
+      // System prompt toggle functionality
+      document.addEventListener('DOMContentLoaded', function() {
+        const systemPromptToggle = document.getElementById('systemPromptToggle');
+        const systemPromptSection = document.getElementById('systemPromptSection');
+        const systemPromptIcon = document.getElementById('systemPromptIcon');
+        
+        systemPromptToggle.addEventListener('click', function() {
+          const isCollapsed = systemPromptSection.classList.contains('collapsed');
+          
+          if (isCollapsed) {
+            systemPromptSection.classList.remove('collapsed');
+            systemPromptSection.style.maxHeight = '200px';
+            systemPromptToggle.classList.add('expanded');
+            systemPromptIcon.textContent = '▼';
+          } else {
+            systemPromptSection.classList.add('collapsed');
+            systemPromptSection.style.maxHeight = '0';
+            systemPromptToggle.classList.remove('expanded');
+            systemPromptIcon.textContent = '▶';
+          }
+        });
+      });
     </script>
-  </body>
-</html>

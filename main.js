@@ -57,9 +57,9 @@ function createMainWindow() {
 
   mainWindow.loadFile("index.html");
 
-  if (process.env.NODE_ENV === "development") {
-    mainWindow.webContents.openDevTools();
-  }
+  // if (process.env.NODE_ENV === "development") {
+    // mainWindow.webContents.openDevTools();
+  // }
 }
 
 async function handleBrowserCommand(command) {
@@ -154,20 +154,20 @@ async function handleBrowserCommand(command) {
 
       case "observe":
         if (!playwrightBridge) {
-          return { status: "error", error: 'Playwright not initialized' };
+          return { status: "error", error: 'Puppeteer not initialized' };
         }
         const observation = await playwrightBridge.getObservation();
         return { status: "success", data: observation };
       case "annotated-screenshot":
         if (!playwrightBridge) {
-          return { status: "error", error: 'Playwright not initialized' };
+          return { status: "error", error: 'Puppeteer not initialized' };
         }
         const annotatedResult = await playwrightBridge.createAnnotatedScreenshot();
         return { status: "success", data: annotatedResult };
 
       case "action":
         if (!playwrightBridge) {
-          return { status: "error", error: 'Playwright not initialized' };
+          return { status: "error", error: 'Puppeteer not initialized' };
         }
         
         // Parse action parameters: actionIndex, actionType, inputValue
@@ -185,7 +185,7 @@ async function handleBrowserCommand(command) {
 
       case "action-space":
         if (!playwrightBridge) {
-          return { status: "error", error: 'Playwright not initialized' };
+          return { status: "error", error: 'Puppeteer not initialized' };
         }
         
         const elements = await playwrightBridge.getActionableElements();
@@ -417,16 +417,16 @@ ipcMain.handle(
         // Build command arguments
         const args = [];
         // Add model if specified
-        if (options.model) {
+        // if (options.model) {
           args.push("-m", options.model);
-        }
+        // }
 
         // Combine prompt with image path if screenshot was captured
         let finalPrompt = prompt || "";
         // if (imagePath && fs.existsSync(imagePath)) {
-          // const absoluteImagePath = path.resolve(imagePath);
-          // finalPrompt = `${prompt}\n\n[Image: ${absoluteImagePath}]`;
-          // console.log("Added screenshot path to prompt:", absoluteImagePath);
+        //   const absoluteImagePath = path.resolve(imagePath);
+        //   finalPrompt = `${prompt}\n\n[Image: ${absoluteImagePath}]`;
+        //   console.log("Added screenshot path to prompt:", absoluteImagePath);
         // }
 
         // Add final prompt
@@ -698,7 +698,7 @@ ipcMain.handle("toggle-browser-window", async () => {
 ipcMain.handle('ai-observe', async () => {
   try {
     if (!playwrightBridge) {
-      return { success: false, error: 'Playwright not initialized' };
+      return { success: false, error: 'Puppeteer not initialized' };
     }
     
     const observation = await playwrightBridge.getObservation();
@@ -713,7 +713,7 @@ ipcMain.handle('ai-observe', async () => {
 ipcMain.handle('ai-annotated-screenshot', async () => {
   try {
     if (!playwrightBridge) {
-      return { success: false, error: 'Playwright not initialized' };
+      return { success: false, error: 'Puppeteer not initialized' };
     }
     
     const result = await playwrightBridge.createAnnotatedScreenshot();
@@ -728,7 +728,7 @@ ipcMain.handle('ai-annotated-screenshot', async () => {
 ipcMain.handle('ai-action', async (event, { actionIndex, actionType = 'click', inputValue = null }) => {
   try {
     if (!playwrightBridge) {
-      return { success: false, error: 'Playwright not initialized' };
+      return { success: false, error: 'Puppeteer not initialized' };
     }
     
     const result = await playwrightBridge.takeAction(actionIndex, actionType, inputValue);
@@ -743,7 +743,7 @@ ipcMain.handle('ai-action', async (event, { actionIndex, actionType = 'click', i
 ipcMain.handle('ai-action-space', async () => {
   try {
     if (!playwrightBridge) {
-      return { success: false, error: 'Playwright not initialized' };
+      return { success: false, error: 'Puppeteer not initialized' };
     }
     
     const elements = await playwrightBridge.getActionableElements();
@@ -792,35 +792,28 @@ function cleanupTempDirectory() {
 }
 
 // App event handlers
-app.whenReady().then(() => {
-  createTempDirectory();
-  createMainWindow();
-  browserWindow = createBrowserWindow();
+app.whenReady().then(async () => {
   
+  browserWindow = await createBrowserWindow(); // hidden promise when opening inital window prevented playwright attachment omg so fustrating
+  playwrightBridge = setupPlaywrightIPC(app, browserWindow);
 
-
-
-  // createBrowserWindow(); // if using playwright dont launch this window
-
-  playwrightBridge = setupPlaywrightIPC(ipcMain, app, browserWindow);
-  playwrightBridge.launchElectronPlaywright()  
-  // app.on("activate", () => {
-  //   if (BrowserWindow.getAllWindows().length === 0) {
-  //     createMainWindow();
-  //     createBrowserWindow();
-  //   }
-  // });
+  await playwrightBridge.launchElectronPlaywright()
+    createTempDirectory();
+    createMainWindow();
 });
 
-app.on("window-all-closed", () => {
+app.on("window-all-closed",async () => {
   cleanupTempDirectory();
+  await playwrightBridge.cleanup();
   if (process.platform !== "darwin") {
     app.quit();
   }
 });
 
-app.on("before-quit", () => {
+app.on("before-quit",async () => {
+  await playwrightBridge.cleanup();
   cleanupTempDirectory();
+  app.quit();
 });
 
 // Prevent new window creation
